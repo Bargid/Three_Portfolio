@@ -7,8 +7,10 @@ export default function Experience()
 {
 
     // House scene Import and loading
-    const HouseModel = useGLTF('./models/House_Scene.glb')
-    console.log(HouseModel.nodes);
+    const { nodes } = useGLTF('./models/House_Scene.glb')
+    console.log(nodes.Baked);
+    const bakedObject = nodes.Baked;
+    console.log(bakedObject);
 
     // House scene texture
     const bakedTexture = useTexture('/models/Baked.jpg')
@@ -18,13 +20,14 @@ export default function Experience()
     return <>
 
         <OrbitControls makeDefault />
-        <Environment preset="city" />
+        {/* <Environment preset="city" /> */}
 
         {/* Background */}
         <color args = { [ '#201919' ] } attach = "background" />
 
-        <mesh geometry = { HouseModel.nodes.Baked.geometry } position = { [ 0, -10, 0 ] }>
+        <mesh geometry = { bakedObject.geometry } position = { [ 0, -10, 0 ] }>
             <meshBasicMaterial map = { bakedTexture } />
         </mesh>
+        
     </>
 }
