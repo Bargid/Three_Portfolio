@@ -1,88 +1,153 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import GUI from 'lil-gui';
-import waterVertexShader from './shaders/water/vertex.glsl';
-import waterFragmentShader from './shaders/water/fragment.glsl';
+// // import { useRef } from 'react';
+// // import { useFrame } from '@react-three/fiber';
+// // import { ShaderMaterial } from 'three';
+// // import * as THREE from 'three'
+// // import GUI from 'lil-gui'
+// // import waterVertexShader from './shaders/water/vertex.glsl';
+// // import waterFragmentShader from './shaders/water/fragment.glsl';
 
-const initWaterScene = (canvas) => {
-    const gui = new GUI({ width: 340 });
-    const debugObject = {};
+// // const WaterShader = () => {
+// //   const materialRef = useRef();
 
-    const scene = new THREE.Scene();
+// //   useFrame((state, delta) => {
+// //     const elapsedTime = state.clock.getElapsedTime();
+// //     materialRef.current.uniforms.uTime.value = elapsedTime;
+// //   });
 
-    // Geometry
-    const waterGeometry = new THREE.PlaneGeometry(2, 2, 512, 512);
+// //   return (
+// //     <shaderMaterial
+// //       ref={materialRef}
+// //       vertexShader={ waterVertexShader }
+// //       fragmentShader={ waterFragmentShader }
+// //       uniforms={{
+// //         uTime: { value: 0 },
+// //         uBigWavesElevation: { value: 0.2 },
+// //         uBigWavesFrequency: { value: new THREE.Vector2(4, 1.5) },
+// //         uBigWavesSpeed: { value: 0.75 },
+// //         uSmallWavesElevation: { value: 0.15 },
+// //         uSmallWavesFrequency: { value: 3 },
+// //         uSmallWavesSpeed: { value: 0.2 },
+// //         uSmallIterations: { value: 4 },
+// //         uDepthColor: { value: new THREE.Color(debugObject.depthColor) },
+// //         uSurfaceColor: { value: new THREE.Color(debugObject.surfaceColor) },
+// //         uColorOffset: { value: 0.08 },
+// //         uColorMultiplier: { value: 5 },
+// //       }}
+// //     />
+// //   );
+// // };
 
-    // Material
-    const waterMaterial = new THREE.ShaderMaterial({
-        vertexShader: waterVertexShader,
-        fragmentShader: waterFragmentShader,
-        uniforms: {
-            uTime: { value: 0 },
-            uBigWavesElevation: { value: 0.2 },
-            uBigWavesFrequency: { value: new THREE.Vector2(4, 1.5) },
-            uBigWavesSpeed: { value: 0.75 },
-            // Add other uniforms here as needed
-        }
-    });
+// // export default WaterShader;
 
-    const water = new THREE.Mesh(waterGeometry, waterMaterial);
-    water.rotation.x = -Math.PI * 0.5;
-    scene.add(water);
+// import React, { useRef, useEffect } from 'react';
+// import { useFrame } from '@react-three/fiber';
+// import { ShaderMaterial } from 'three';
+// import * as THREE from 'three';
+// import GUI from 'lil-gui';
+// import waterVertexShader from './shaders/water/vertex.glsl';
+// import waterFragmentShader from './shaders/water/fragment.glsl';
 
-    const sizes = {
-        width: window.innerWidth,
-        height: window.innerHeight
-    };
+// const WaterShader = () => {
+//   const materialRef = useRef();
 
-    const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
-    camera.position.set(1, 1, 1);
-    scene.add(camera);
+//   useEffect(() => {
+//     // Canvas
+//     const canvas = document.querySelector('canvas.webgl');
 
-    const renderer = new THREE.WebGLRenderer({
-        canvas: canvas
-    });
-    renderer.setSize(sizes.width, sizes.height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+//     // Scene
+//     const scene = new THREE.Scene();
 
-    const controls = new OrbitControls(camera, canvas);
-    controls.enableDamping = true;
+//     // Debug
+//     const gui = new GUI({ width: 340 });
+//     const debugObject = {};
 
-    const clock = new THREE.Clock();
+//     // Geometry 
+//     const waterGeometry = new THREE.PlaneGeometry(2, 2, 512, 512);
 
-    const animate = () => {
-        const elapsedTime = clock.getElapsedTime();
+//     // Colors
+//     debugObject.depthColor = '#186691';
+//     debugObject.surfaceColor = '#9bd8ff';
 
-        waterMaterial.uniforms.uTime.value = elapsedTime;
+//     gui.addColor(debugObject, 'depthColor').onChange(() => { materialRef.current.uniforms.uDepthColor.value.set(debugObject.depthColor); });
+//     gui.addColor(debugObject, 'surfaceColor').onChange(() => { materialRef.current.uniforms.uSurfaceColor.value.set(debugObject.surfaceColor); });
 
-        controls.update();
-        renderer.render(scene, camera);
+//     // Material
+//     const waterMaterial = new THREE.ShaderMaterial({
+//       vertexShader: waterVertexShader,
+//       fragmentShader: waterFragmentShader,
+//       uniforms: {
+//         uTime: { value: 0 },
+//         uBigWavesElevation: { value: 0.2 },
+//         // Add other uniforms here
+//       },
+//     });
 
-        requestAnimationFrame(animate);
-    };
+//     // Add material to materialRef
+//     materialRef.current = waterMaterial;
 
-    const resizeHandler = () => {
-        sizes.width = window.innerWidth;
-        sizes.height = window.innerHeight;
+//     gui.add(waterMaterial.uniforms.uBigWavesElevation, 'value').min(0).max(1).step(0.001).name('uBigWavesElevation');
+//     // Add other GUI controls here
 
-        camera.aspect = sizes.width / sizes.height;
-        camera.updateProjectionMatrix();
+//     // Mesh
+//     const water = new THREE.Mesh(waterGeometry, waterMaterial);
+//     water.rotation.x = -Math.PI * 0.5;
+//     scene.add(water);
 
-        renderer.setSize(sizes.width, sizes.height);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    };
+//     // Renderer
+//     const renderer = new THREE.WebGLRenderer({
+//       canvas: canvas,
+//     });
+//     renderer.setSize(window.innerWidth, window.innerHeight);
+//     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    window.addEventListener('resize', resizeHandler);
+//     // Sizes
+//     const sizes = {
+//       width: window.innerWidth,
+//       height: window.innerHeight,
+//     };
 
-    const cleanup = () => {
-        window.removeEventListener('resize', resizeHandler);
-    };
+//     window.addEventListener('resize', () => {
+//       // Update sizes
+//       sizes.width = window.innerWidth;
+//       sizes.height = window.innerHeight;
 
-    animate(); // Start animation loop
+//       // Update camera
+//       // Update renderer
+//       renderer.setSize(sizes.width, sizes.height);
+//       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+//     });
 
-    return {
-        cleanup
-    };
-};
+//     // Animate
+//     const clock = new THREE.Clock();
 
-export default initWaterScene;
+//     const tick = () => {
+//       const elapsedTime = clock.getElapsedTime();
+
+//       // Water
+//       waterMaterial.uniforms.uTime.value = elapsedTime;
+
+//       // Render
+//       renderer.render(scene, camera);
+
+//       // Call tick again on the next frame
+//       window.requestAnimationFrame(tick);
+//     };
+
+//     tick();
+
+//     // Cleanup function
+//     return () => {
+//       // Clean up event listeners or any resources if needed
+//       window.removeEventListener('resize');
+//     };
+//   }, []); // Empty dependency array ensures this effect runs only once after initial mount
+
+//   useFrame((state, delta) => {
+//     const elapsedTime = state.clock.getElapsedTime();
+//     materialRef.current.uniforms.uTime.value = elapsedTime;
+//   });
+
+//   return null; // Return null because nothing is rendered directly by this component
+// };
+
+// export default WaterShader;
