@@ -27,7 +27,7 @@ export default function Experience() {
         </mesh>
 
          {/* Render the WaterScene component */}
-         <WaterScene />
+         {/* <WaterScene /> */}
         
     </>
 }
