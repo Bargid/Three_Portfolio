@@ -1,18 +1,12 @@
-import React, { useEffect, useRef } from 'react';
-import initWaterScene from './WaterShader.jsx'; // Import the function
+// import { Plane } from '@react-three/drei';
+// import WaterShader from './WaterShader.jsx';
 
-const WaterScene = () => {
-    const canvasRef = useRef();
+// const WaterScene = () => {
+//   return (
+//     <Plane args={[2, 2, 512, 512]}>
+//       <WaterShader />
+//     </Plane>
+//   );
+// };
 
-    useEffect(() => {
-        const cleanup = initWaterScene(canvasRef.current);
-
-        return () => {
-            cleanup(); // Clean up event listeners
-        };
-    }, []);
-
-    return <canvas ref={canvasRef} className="webgl" />;
-};
-
-export default WaterScene;
+// export default WaterScene;
