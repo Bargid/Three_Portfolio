@@ -18,19 +18,19 @@ export default function Experience() {
         {
             uTime: 0,
     
-            uBigWavesElevation: 0.2,
-            uBigWavesFrequency: new THREE.Vector2(4, 1.5),
-            uBigWavesSpeed: 0.75,
+            uBigWavesElevation: 0.08,
+            uBigWavesFrequency: new THREE.Vector2(1.52, 3.5),
+            uBigWavesSpeed: 1.4,
     
             uSmallWavesElevation: 0.15,
-            uSmallWavesFrequency: 3,
-            uSmallWavesSpeed: 0.2,
-            uSmallIterations: 4,
+            uSmallWavesFrequency: 2.46,
+            uSmallWavesSpeed: 0.24,
+            uSmallIterations: 1,
     
-            uDepthColor: new THREE.Color('#186691'),
-            uSurfaceColor: new THREE.Color('#9bd8ff'),
-            uColorOffset: 0.08,
-            uColorMultiplier: 5
+            uDepthColor: new THREE.Color('#1e00ff'),
+            uSurfaceColor: new THREE.Color('#6b6aa0'),
+            uColorOffset: 0.11,
+            uColorMultiplier: 3
         },
         waterVertexShader,
         waterFragmentShader
@@ -38,16 +38,17 @@ export default function Experience() {
     
     extend({ WaterMaterial })
     
+    // House,Island and lights geometry
     const { nodes } = useGLTF('./models/House_Scene.glb')
     const bakedObject = nodes.Baked;
-    const chuteTop = nodes.Chute_top;
+    console.log(nodes);
 
     // House scene texture
     const bakedTexture = useTexture('/models/Baked_02.jpg')
     bakedTexture.flipY = false
 
     // water geometry
-    const waterGeometry = new THREE.PlaneGeometry(10, 3, 64, 1024)
+    const waterGeometry = new THREE.PlaneGeometry(13, 2.8, 12, 1024)
 
     // waterMaterial
     const waterMaterial = useRef()
@@ -60,19 +61,19 @@ export default function Experience() {
     // debug object for GUI
     const debugObject = {
 
-        uBigWavesElevation: 0.2,
-        uBigWavesFrequency: new THREE.Vector2(4, 1.5),
-        uBigWavesSpeed: 0.75,
+        uBigWavesElevation: 0.08,
+        uBigWavesFrequency: new THREE.Vector2(1.52, 3.5),
+        uBigWavesSpeed: 1.4,
 
         uSmallWavesElevation: 0.15,
-        uSmallWavesFrequency: 3,
-        uSmallWavesSpeed: 0.2,
-        uSmallIterations: 4,
+        uSmallWavesFrequency: 2.46,
+        uSmallWavesSpeed: 0.24,
+        uSmallIterations: 1,
 
-        uDepthColor: new THREE.Color('#186691'),
-        uSurfaceColor: new THREE.Color('#9bd8ff'),
-        uColorOffset: 0.08,
-        uColorMultiplier: 5
+        uDepthColor: new THREE.Color('#0300ff'),
+        uSurfaceColor: new THREE.Color('#252459'),
+        uColorOffset: 0.11,
+        uColorMultiplier: 3
 
     };
 
@@ -116,14 +117,65 @@ export default function Experience() {
         {/* Background */}
         <color args={['#201919']} attach="background" />
 
-        <mesh geometry={bakedObject.geometry} position={[0, -10, 0]}>
+        {/* House and Island */}
+        <mesh 
+            geometry={bakedObject.geometry} 
+            position={bakedObject.position}
+            rotation={bakedObject.rotation}
+            scale={bakedObject.scale}>
             <meshBasicMaterial map={bakedTexture} />
         </mesh>
 
-         {/* Render the WaterScene component */}
+        {/* Lights geometries */}
+        <mesh 
+            geometry={nodes.Circle_emission.geometry}
+            position={nodes.Circle_emission.position}
+            rotation={nodes.Circle_emission.rotation}
+            scale={nodes.Circle_emission.scale}
+            >
+                <meshBasicMaterial color="#ffffe5" />
+        </mesh>
+
+        <mesh
+            geometry={nodes.Door_emission.geometry}
+            position={nodes.Door_emission.position}
+            rotation={nodes.Door_emission.rotation}
+            scale={nodes.Door_emission.scale}
+            >
+                <meshBasicMaterial color="#ffffe5" />
+        </mesh>
+
+        <mesh
+            geometry={nodes.OverDoor_emission.geometry}
+            position={nodes.OverDoor_emission.position}
+            rotation={nodes.OverDoor_emission.rotation}
+            scale={nodes.OverDoor_emission.scale}
+            >
+                <meshBasicMaterial color="#ffffe5" />
+        </mesh>
+
+        <mesh
+            geometry={nodes.Window_emission.geometry}
+            position={nodes.Window_emission.position}
+            rotation={nodes.Window_emission.rotation}
+            scale={nodes.Window_emission.scale}
+            >
+                <meshBasicMaterial color="#ffffe5" />
+        </mesh>
+
+        <mesh
+            geometry={nodes.Poteau_emission.geometry}
+            position={nodes.Poteau_emission.position}
+            rotation={nodes.Poteau_emission.rotation}
+            scale={nodes.Poteau_emission.scale}
+            >
+                <meshBasicMaterial color="#ffffe5" />
+        </mesh>
+
+         {/* Water */}
          <mesh
             geometry={ waterGeometry }
-            position={[ 0, -1.58, 0.5 ]}
+            position={[ -0.6, 0.15, -1 ]}
             rotation={[ -Math.PI / 2, 0, 0 ]}
          >
             <waterMaterial ref={ waterMaterial }/>
