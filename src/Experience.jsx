@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { shaderMaterial, OrbitControls, useGLTF, useTexture, Plane } from '@react-three/drei'
+import { shaderMaterial, OrbitControls, useGLTF, useTexture, Plane, PerspectiveCamera } from '@react-three/drei'
 import { extend, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import GUI from 'lil-gui';
@@ -13,8 +13,9 @@ import { log } from 'three/examples/jsm/nodes/Nodes.js';
 
 export default function Experience() {
 
-    // Refs for Lights
-    const windowRef = useRef();
+    // Camera ref
+    const cameraRef = useRef();
+    const controlsRef = useRef();
     
     // House scene Import and loading
     const WaterMaterial = shaderMaterial( 
@@ -43,9 +44,10 @@ export default function Experience() {
     
     // House,Island and lights geometry
     const { nodes } = useGLTF('./models/House_Scene.glb')
-    console.log(nodes.Window_emission);
+    // console.log(nodes.Window_emission);
     const bakedObject = nodes.Baked;
-    console.log(nodes);
+    console.log(nodes.Baked.position);
+    // console.log(nodes);
 
     // House scene texture
     const bakedTexture = useTexture('/models/Baked_02.jpg')
@@ -68,6 +70,7 @@ export default function Experience() {
     // debug object for GUI
     const debugObject = {
 
+        // Water debug object
         uBigWavesElevation: 0.08,
         uBigWavesFrequency: new THREE.Vector2(1.52, 3.5),
         uBigWavesSpeed: 1.4,
@@ -80,7 +83,21 @@ export default function Experience() {
         uDepthColor: new THREE.Color('#0300ff'),
         uSurfaceColor: new THREE.Color('#252459'),
         uColorOffset: 0.11,
-        uColorMultiplier: 3
+        uColorMultiplier: 3,
+
+        // Camera debug object
+        cameraPositionX: 0,
+        cameraPositionY: 5,
+        cameraPositionZ: 10,
+        cameraRotationX: 0,
+        cameraRotationY: 0,
+        cameraRotationZ: 0,
+        cameraFov: 75,
+
+        // Camera target
+        targetX: 0,
+        targetY: 0,
+        targetZ: 0,
 
     };
 
@@ -118,30 +135,71 @@ export default function Experience() {
     gui.addColor(debugObject, 'uSurfaceColor').name('Surface Color').onChange(updateMaterialUniforms);
     gui.add(debugObject, 'uColorOffset').min(0).max(1).step(0.01).name('Color Offset').onChange(updateMaterialUniforms);
     gui.add(debugObject, 'uColorMultiplier').min(0).max(10).step(0.01).name('Color Multiplier').onChange(updateMaterialUniforms);
-    gui.add(debugObject, 'uWindowPositionX').min(-10).max(10).step(0.1).name('Window Pos X').onChange(() => {
-        windowRef.current.position.x = debugObject.uWindowPositionX;
+
+    // Camera GUI
+
+    gui.add(debugObject, 'cameraPositionX').min(-20).max(20).step(0.1).name('Camera Pos X').onChange(() => {
+        if (cameraRef.current) cameraRef.current.position.x = debugObject.cameraPositionX;
     });
-    gui.add(debugObject, 'uWindowPositionY').min(-10).max(10).step(0.1).name('Window Pos Y').onChange(() => {
-        windowRef.current.position.y = debugObject.uWindowPositionY;
+    gui.add(debugObject, 'cameraPositionY').min(-20).max(20).step(0.1).name('Camera Pos Y').onChange(() => {
+        if (cameraRef.current) cameraRef.current.position.y = debugObject.cameraPositionY;
     });
-    gui.add(debugObject, 'uWindowPositionZ').min(-10).max(10).step(0.1).name('Window Pos Z').onChange(() => {
-        windowRef.current.position.z = debugObject.uWindowPositionZ;
+    gui.add(debugObject, 'cameraPositionZ').min(-50).max(50).step(0.1).name('Camera Pos Z').onChange(() => {
+        if (cameraRef.current) cameraRef.current.position.z = debugObject.cameraPositionZ;
+    });
+    gui.add(debugObject, 'cameraRotationX').min(0).max(Math.PI * 2).step(0.01).name('Camera Rot X').onChange(() => {
+        if (cameraRef.current) cameraRef.current.rotation.x = debugObject.cameraRotationX;
+    });
+    gui.add(debugObject, 'cameraRotationY').min(0).max(Math.PI * 2).step(0.01).name('Camera Rot Y').onChange(() => {
+        if (cameraRef.current) cameraRef.current.rotation.y = debugObject.cameraRotationY;
+    });
+    gui.add(debugObject, 'cameraRotationZ').min(0).max(Math.PI * 2).step(0.01).name('Camera Rot Z').onChange(() => {
+        if (cameraRef.current) cameraRef.current.rotation.z = debugObject.cameraRotationZ;
+    });
+    gui.add(debugObject, 'cameraFov').min(10).max(100).step(1).name('Camera FOV').onChange(() => {
+        if (cameraRef.current) {
+            cameraRef.current.fov = debugObject.cameraFov;
+            cameraRef.current.updateProjectionMatrix();  // Make sure the camera updates after the change
+        }
+    });
+
+    gui.add(debugObject, 'targetX').min(-20).max(20).step(0.1).name('Target Pos X').onChange(() => {
+        if (controlsRef.current) {
+            controlsRef.current.target.set(debugObject.targetX, debugObject.targetY, debugObject.targetZ);
+            controlsRef.current.update();  // Make sure the controls are updated with the new target
+        }
     });
     
-    gui.add(debugObject, 'uWindowRotationX').min(0).max(Math.PI * 2).step(0.01).name('Window Rot X').onChange(() => {
-        windowRef.current.rotation.x = debugObject.uWindowRotationX;
+    gui.add(debugObject, 'targetY').min(-20).max(20).step(0.1).name('Target Pos Y').onChange(() => {
+        if (controlsRef.current) {
+            controlsRef.current.target.set(debugObject.targetX, debugObject.targetY, debugObject.targetZ);
+            controlsRef.current.update();
+        }
     });
-    gui.add(debugObject, 'uWindowRotationY').min(0).max(Math.PI * 2).step(0.01).name('Window Rot Y').onChange(() => {
-        windowRef.current.rotation.y = debugObject.uWindowRotationY;
+    
+    gui.add(debugObject, 'targetZ').min(-50).max(50).step(0.1).name('Target Pos Z').onChange(() => {
+        if (controlsRef.current) {
+            controlsRef.current.target.set(debugObject.targetX, debugObject.targetY, debugObject.targetZ);
+            controlsRef.current.update();
+        }
     });
-    gui.add(debugObject, 'uWindowRotationZ').min(0).max(Math.PI * 2).step(0.01).name('Window Rot Z').onChange(() => {
-        windowRef.current.rotation.z = debugObject.uWindowRotationZ;
-    });
+    
     
 
 
     return <>
-        <OrbitControls makeDefault />
+        <OrbitControls ref={controlsRef} makeDefault />
+        {/* <OrbitControls makeDefault 
+                       target={[debugObject.targetX, debugObject.targetY, debugObject.targetZ]}/> */}
+
+        {/* Camera */}
+        <PerspectiveCamera
+            ref={cameraRef}
+            makeDefault
+            position={[debugObject.cameraPositionX, debugObject.cameraPositionY, debugObject.cameraPositionZ]}
+            rotation={[debugObject.cameraRotationX, debugObject.cameraRotationY, debugObject.cameraRotationZ]}
+            fov={debugObject.cameraFov}
+        />
 
         {/* Background */}
         <color args={['#201919']} attach="background" />
@@ -210,11 +268,11 @@ export default function Experience() {
             <waterMaterial ref={ waterMaterial }/>
          </mesh>
 
-         {/* Lights Objects */}
+         {/* Lights Objects
          <mesh geometry ={ nodes.Window_emission.geometry }
                ref={windowRef}>
             <meshBasicMaterial color="#ffffe5" />
-         </mesh>
+         </mesh> */}
         
     </>
 };
