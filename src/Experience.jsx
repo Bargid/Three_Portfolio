@@ -12,6 +12,9 @@ import { log } from 'three/examples/jsm/nodes/Nodes.js';
 
 
 export default function Experience() {
+
+    // Refs for Lights
+    const windowRef = useRef();
     
     // House scene Import and loading
     const WaterMaterial = shaderMaterial( 
@@ -39,12 +42,16 @@ export default function Experience() {
     extend({ WaterMaterial })
     
     const { nodes } = useGLTF('./models/House_Scene.glb')
+    console.log(nodes.Window_emission);
     const bakedObject = nodes.Baked;
     const chuteTop = nodes.Chute_top;
 
     // House scene texture
     const bakedTexture = useTexture('/models/Baked_02.jpg')
     bakedTexture.flipY = false
+
+    // Emissve Lights
+    
 
     // water geometry
     const waterGeometry = new THREE.PlaneGeometry(10, 3, 64, 1024)
@@ -72,7 +79,15 @@ export default function Experience() {
         uDepthColor: new THREE.Color('#186691'),
         uSurfaceColor: new THREE.Color('#9bd8ff'),
         uColorOffset: 0.08,
-        uColorMultiplier: 5
+        uColorMultiplier: 5,
+
+        // Window Light
+        uWindowPositionX: 0,
+        uWindowPositionY: -1,
+        uWindowPositionZ: 0,
+        uWindowRotationX: 0,
+        uWindowRotationY: 0,
+        uWindowRotationZ: 0,
 
     };
 
@@ -110,6 +125,28 @@ export default function Experience() {
     gui.addColor(debugObject, 'uSurfaceColor').name('Surface Color').onChange(updateMaterialUniforms);
     gui.add(debugObject, 'uColorOffset').min(0).max(1).step(0.01).name('Color Offset').onChange(updateMaterialUniforms);
     gui.add(debugObject, 'uColorMultiplier').min(0).max(10).step(0.01).name('Color Multiplier').onChange(updateMaterialUniforms);
+    gui.add(debugObject, 'uWindowPositionX').min(-10).max(10).step(0.1).name('Window Pos X').onChange(() => {
+        windowRef.current.position.x = debugObject.uWindowPositionX;
+    });
+    gui.add(debugObject, 'uWindowPositionY').min(-10).max(10).step(0.1).name('Window Pos Y').onChange(() => {
+        windowRef.current.position.y = debugObject.uWindowPositionY;
+    });
+    gui.add(debugObject, 'uWindowPositionZ').min(-10).max(10).step(0.1).name('Window Pos Z').onChange(() => {
+        windowRef.current.position.z = debugObject.uWindowPositionZ;
+    });
+    
+    gui.add(debugObject, 'uWindowRotationX').min(0).max(Math.PI * 2).step(0.01).name('Window Rot X').onChange(() => {
+        windowRef.current.rotation.x = debugObject.uWindowRotationX;
+    });
+    gui.add(debugObject, 'uWindowRotationY').min(0).max(Math.PI * 2).step(0.01).name('Window Rot Y').onChange(() => {
+        windowRef.current.rotation.y = debugObject.uWindowRotationY;
+    });
+    gui.add(debugObject, 'uWindowRotationZ').min(0).max(Math.PI * 2).step(0.01).name('Window Rot Z').onChange(() => {
+        windowRef.current.rotation.z = debugObject.uWindowRotationZ;
+    });
+    
+
+
     return <>
         <OrbitControls makeDefault />
 
@@ -127,6 +164,12 @@ export default function Experience() {
             rotation={[ -Math.PI / 2, 0, 0 ]}
          >
             <waterMaterial ref={ waterMaterial }/>
+         </mesh>
+
+         {/* Lights Objects */}
+         <mesh geometry ={ nodes.Window_emission.geometry }
+               ref={windowRef}>
+            <meshBasicMaterial color="#ffffe5" />
          </mesh>
         
     </>
