@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { shaderMaterial, OrbitControls, useGLTF, useTexture, Plane, PerspectiveCamera } from '@react-three/drei'
 import { extend, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -16,6 +16,60 @@ export default function Experience() {
     // Camera ref
     const cameraRef = useRef();
     const controlsRef = useRef();
+
+    // const initialCameraPosition = [7.1, 2.5, 4.7];
+    // const initialTarget = [-2.8, 1.4, 1.2];
+
+    // // Force OrbitControls to update after setting initial position and target
+    // useEffect(() => {
+    // if (controlsRef.current) {
+    //     const controls = controlsRef.current;
+    //     controls.object.position.set(...initialCameraPosition);
+    //     controls.target.set(...initialTarget);
+    //     controls.update(); // Force OrbitControls to update its state
+    //     }
+    // }, []); // Run once on mount
+
+// --------------------------------------------------------------------------------------------------
+
+    // Track les mouvements de souris pour Parallax
+    const mouse = useRef({ x: 0, y: 0 });
+    const handleMouseMove = (event) => {
+        mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    };
+    React.useEffect(() => {
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, []);
+
+    // // Effet Parallax
+    // useFrame(() => {
+    //     if (cameraRef.current) {
+    //         const parallaxStrength = 0.2; // Adjust the intensity of the parallax
+    //         cameraRef.current.position.x = 7.1 + mouse.current.x * parallaxStrength;
+    //         cameraRef.current.position.y = 2.5 + mouse.current.y * parallaxStrength;
+    //     }
+    // });
+
+    useFrame(() => {
+        if (cameraRef.current) {
+            const parallaxStrength = 1; // Adjust the intensity of the parallax
+            const targetX = 7.1 + mouse.current.x * parallaxStrength;
+            const targetY = 2.5 + mouse.current.y * parallaxStrength;
+            // const targetZ = -2.8 + mouse.current.z * parallaxStrength;
+
+            // Smooth transition using interpolation
+            cameraRef.current.position.x += (targetX - cameraRef.current.position.x) * 0.1;
+            cameraRef.current.position.y += (targetY - cameraRef.current.position.y) * 0.1;
+            // cameraRef.current.position.z += (targetZ - cameraRef.current.position.z) * 0.1;
+
+            // Ensure camera remains looking at the target
+            cameraRef.current.lookAt(-2.8, 1.4, 1.2);
+        }
+    });
+
+// --------------------------------------------------------------------------------------------------
     
     // House scene Import and loading
     const WaterMaterial = shaderMaterial( 
@@ -86,18 +140,18 @@ export default function Experience() {
         uColorMultiplier: 3,
 
         // Camera debug object
-        cameraPositionX: 0,
-        cameraPositionY: 5,
-        cameraPositionZ: 10,
+        cameraPositionX: 7.1,
+        cameraPositionY: 2.5,
+        cameraPositionZ: 4.7,
         cameraRotationX: 0,
         cameraRotationY: 0,
         cameraRotationZ: 0,
-        cameraFov: 75,
+        cameraFov: 47,
 
         // Camera target
-        targetX: 0,
-        targetY: 0,
-        targetZ: 0,
+        targetX: -2.8,
+        targetY: 1.4,
+        targetZ: 1.2,
 
     };
 
@@ -183,12 +237,62 @@ export default function Experience() {
             controlsRef.current.update();
         }
     });
-    
-    
 
+        // // Update GUI controls to interact with OrbitControls camera
+        // gui.add(debugObject, 'cameraPositionX').min(-20).max(20).step(0.1).name('Camera Pos X').onChange(() => {
+        //     if (controlsRef.current) controlsRef.current.object.position.x = debugObject.cameraPositionX;
+        // });
+        // gui.add(debugObject, 'cameraPositionY').min(-20).max(20).step(0.1).name('Camera Pos Y').onChange(() => {
+        //     if (controlsRef.current) controlsRef.current.object.position.y = debugObject.cameraPositionY;
+        // });
+        // gui.add(debugObject, 'cameraPositionZ').min(-50).max(50).step(0.1).name('Camera Pos Z').onChange(() => {
+        //     if (controlsRef.current) controlsRef.current.object.position.z = debugObject.cameraPositionZ;
+        // });
+        // gui.add(debugObject, 'cameraRotationX').min(0).max(Math.PI * 2).step(0.01).name('Camera Rot X').onChange(() => {
+        //     if (controlsRef.current) controlsRef.current.object.rotation.x = debugObject.cameraRotationX;
+        // });
+        // gui.add(debugObject, 'cameraRotationY').min(0).max(Math.PI * 2).step(0.01).name('Camera Rot Y').onChange(() => {
+        //     if (controlsRef.current) controlsRef.current.object.rotation.y = debugObject.cameraRotationY;
+        // });
+        // gui.add(debugObject, 'cameraRotationZ').min(0).max(Math.PI * 2).step(0.01).name('Camera Rot Z').onChange(() => {
+        //     if (controlsRef.current) controlsRef.current.object.rotation.z = debugObject.cameraRotationZ;
+        // });
+        // gui.add(debugObject, 'cameraFov').min(10).max(100).step(1).name('Camera FOV').onChange(() => {
+        //     if (controlsRef.current) {
+        //         controlsRef.current.object.fov = debugObject.cameraFov;
+        //         controlsRef.current.object.updateProjectionMatrix(); // Ensure camera updates
+        //     }
+        // });
+    
+        // // Add target controls
+        // gui.add(debugObject, 'targetX').min(-20).max(20).step(0.1).name('Target Pos X').onChange(() => {
+        //     if (controlsRef.current) {
+        //         controlsRef.current.target.set(debugObject.targetX, debugObject.targetY, debugObject.targetZ);
+        //         controlsRef.current.update();
+        //     }
+        // });
+    
+        // gui.add(debugObject, 'targetY').min(-20).max(20).step(0.1).name('Target Pos Y').onChange(() => {
+        //     if (controlsRef.current) {
+        //         controlsRef.current.target.set(debugObject.targetX, debugObject.targetY, debugObject.targetZ);
+        //         controlsRef.current.update();
+        //     }
+        // });
+    
+        // gui.add(debugObject, 'targetZ').min(-50).max(50).step(0.1).name('Target Pos Z').onChange(() => {
+        //     if (controlsRef.current) {
+        //         controlsRef.current.target.set(debugObject.targetX, debugObject.targetY, debugObject.targetZ);
+        //         controlsRef.current.update();
+        //     }
+        // });
+    
 
     return <>
-        <OrbitControls ref={controlsRef} makeDefault />
+        {/* <OrbitControls ref={controlsRef}
+                       makeDefault
+                       position = {[7.1, 2.5, 4.7]}
+                       target={[-2.8, 1.4, 1.2]}
+        /> */}
         {/* <OrbitControls makeDefault 
                        target={[debugObject.targetX, debugObject.targetY, debugObject.targetZ]}/> */}
 
@@ -196,9 +300,11 @@ export default function Experience() {
         <PerspectiveCamera
             ref={cameraRef}
             makeDefault
-            position={[debugObject.cameraPositionX, debugObject.cameraPositionY, debugObject.cameraPositionZ]}
-            rotation={[debugObject.cameraRotationX, debugObject.cameraRotationY, debugObject.cameraRotationZ]}
-            fov={debugObject.cameraFov}
+            position = {[7.1, 2.5, 4.7]}
+            target={[-2.8, 1.4, 1.2]}
+            // position={[debugObject.cameraPositionX, debugObject.cameraPositionY, debugObject.cameraPositionZ]}
+            // rotation={[debugObject.cameraRotationX, debugObject.cameraRotationY, debugObject.cameraRotationZ]}
+            // fov={debugObject.cameraFov}
         />
 
         {/* Background */}
@@ -267,12 +373,6 @@ export default function Experience() {
          >
             <waterMaterial ref={ waterMaterial }/>
          </mesh>
-
-         {/* Lights Objects
-         <mesh geometry ={ nodes.Window_emission.geometry }
-               ref={windowRef}>
-            <meshBasicMaterial color="#ffffe5" />
-         </mesh> */}
         
     </>
 };
