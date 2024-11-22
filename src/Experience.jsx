@@ -32,42 +32,70 @@ export default function Experience() {
 
 // --------------------------------------------------------------------------------------------------
 
-    // Track les mouvements de souris pour Parallax
-    const mouse = useRef({ x: 0, y: 0 });
-    const handleMouseMove = (event) => {
-        mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    };
-    React.useEffect(() => {
-        window.addEventListener('mousemove', handleMouseMove);
-        return () => window.removeEventListener('mousemove', handleMouseMove);
-    }, []);
+    // // Track les mouvements de souris pour Parallax
+    // const mouse = useRef({ x: 0, y: 0 });
+    // const handleMouseMove = (event) => {
+    //     mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+    //     mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    // };
+    // React.useEffect(() => {
+    //     window.addEventListener('mousemove', handleMouseMove);
+    //     return () => window.removeEventListener('mousemove', handleMouseMove);
+    // }, []);
 
     // // Effet Parallax
     // useFrame(() => {
     //     if (cameraRef.current) {
-    //         const parallaxStrength = 0.2; // Adjust the intensity of the parallax
-    //         cameraRef.current.position.x = 7.1 + mouse.current.x * parallaxStrength;
-    //         cameraRef.current.position.y = 2.5 + mouse.current.y * parallaxStrength;
+    //         const parallaxStrength = 1; // Adjust the intensity of the parallax
+    //         cameraRef.current.position.z = -2.8 + -mouse.current.x * parallaxStrength;
+    //         cameraRef.current.position.y = 2.5 + -mouse.current.y * parallaxStrength;
     //     }
     // });
 
-    useFrame(() => {
-        if (cameraRef.current) {
-            const parallaxStrength = 1; // Adjust the intensity of the parallax
-            const targetX = 7.1 + mouse.current.x * parallaxStrength;
-            const targetY = 2.5 + mouse.current.y * parallaxStrength;
-            // const targetZ = -2.8 + mouse.current.z * parallaxStrength;
+    // useFrame(() => {
+    //     if (cameraRef.current) {
+    //         const parallaxStrength = 1; // Adjust the intensity of the parallax
+    //         const targetZ = 7.1 + mouse.current.x * parallaxStrength;
+    //         const targetY = 2.5 + mouse.current.y * parallaxStrength;
+    //         // const targetZ = -2.8 + mouse.current.z * parallaxStrength;
 
-            // Smooth transition using interpolation
-            cameraRef.current.position.x += (targetX - cameraRef.current.position.x) * 0.1;
-            cameraRef.current.position.y += (targetY - cameraRef.current.position.y) * 0.1;
-            // cameraRef.current.position.z += (targetZ - cameraRef.current.position.z) * 0.1;
+    //         // Smooth transition using interpolation
+    //         cameraRef.current.position.z += (targetZ - cameraRef.current.position.z) * 0.1;
+    //         cameraRef.current.position.y += (targetY - cameraRef.current.position.y) * 0.1;
+    //         // cameraRef.current.position.z += (targetZ - cameraRef.current.position.z) * 0.1;
 
-            // Ensure camera remains looking at the target
-            cameraRef.current.lookAt(-2.8, 1.4, 1.2);
-        }
-    });
+    //         // Ensure camera remains looking at the target
+    //         cameraRef.current.lookAt(-2.8, 1.4, 1.2);
+    //     }
+    // });
+
+        // Track mouse movement
+        const mouse = useRef({ x: 0, y: 0 });
+        const handleMouseMove = (event) => {
+            mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1; // Normalized X
+            mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1; // Normalized Y
+        };
+    
+        useEffect(() => {
+            window.addEventListener('mousemove', handleMouseMove);
+            return () => window.removeEventListener('mousemove', handleMouseMove);
+        }, []);
+    
+        // Apply parallax effect
+        useFrame(() => {
+            if (cameraRef.current) {
+                const parallaxStrength = 0.3; // Adjust intensity
+                const targetY = 2.5 + mouse.current.y * parallaxStrength;
+                const targetZ = 4.7 + mouse.current.x * parallaxStrength;
+    
+                // Smooth interpolation
+                cameraRef.current.position.y += (targetY - cameraRef.current.position.y) * 0.1;
+                cameraRef.current.position.z += (targetZ - cameraRef.current.position.z) * 0.1;
+    
+                // Ensure camera remains looking at the target
+                cameraRef.current.lookAt(new THREE.Vector3(-2.8, 1.4, 1.2));
+            }
+        });
 
 // --------------------------------------------------------------------------------------------------
     
@@ -293,8 +321,6 @@ export default function Experience() {
                        position = {[7.1, 2.5, 4.7]}
                        target={[-2.8, 1.4, 1.2]}
         /> */}
-        {/* <OrbitControls makeDefault 
-                       target={[debugObject.targetX, debugObject.targetY, debugObject.targetZ]}/> */}
 
         {/* Camera */}
         <PerspectiveCamera
@@ -307,13 +333,20 @@ export default function Experience() {
             // fov={debugObject.cameraFov}
         />
 
+        {/* Axes Helper */}
+        <axesHelper args={[20]} position={[0, 0, 0]} />
+
         {/* Background */}
         <color args={['#201919']} attach="background" />
 
         {/* House and Island */}
         <mesh 
             geometry={bakedObject.geometry} 
-            position={bakedObject.position}
+            position={[
+                bakedObject.position.x,
+                bakedObject.position.y,
+                bakedObject.position.z
+            ]}
             rotation={bakedObject.rotation}
             scale={bakedObject.scale}>
             <meshBasicMaterial map={bakedTexture} />
