@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { shaderMaterial, OrbitControls, useGLTF, useTexture, Plane, PerspectiveCamera } from '@react-three/drei'
+import { shaderMaterial, OrbitControls, useGLTF, useTexture, Plane, PerspectiveCamera, Sparkles } from '@react-three/drei'
 import { extend, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import GUI from 'lil-gui';
@@ -17,57 +17,29 @@ export default function Experience() {
     const cameraRef = useRef();
     const controlsRef = useRef();
 
-    // const initialCameraPosition = [7.1, 2.5, 4.7];
-    // const initialTarget = [-2.8, 1.4, 1.2];
+    // const initialZ = -50;
+    // const targetPosition = new THREE.Vector3(7.1, 2.5, 4.7);
+    // const [animationProgress, setAnimationProgress] = useState(0); // Track animation progress
 
-    // // Force OrbitControls to update after setting initial position and target
-    // useEffect(() => {
-    // if (controlsRef.current) {
-    //     const controls = controlsRef.current;
-    //     controls.object.position.set(...initialCameraPosition);
-    //     controls.target.set(...initialTarget);
-    //     controls.update(); // Force OrbitControls to update its state
+    // // Animate the camera position when the scene loads
+    // useFrame((state, delta) => {
+    //     if (cameraRef.current) {
+    //         if (animationProgress < 1) {
+    //             // Increment progress (adjust 0.02 for speed)
+    //             const newProgress = Math.min(animationProgress + delta * 0.5, 1);
+    //             setAnimationProgress(newProgress);
+
+    //             // Interpolate Z position
+    //             const interpolatedZ = THREE.MathUtils.lerp(initialZ, targetPosition.z, newProgress);
+    //             cameraRef.current.position.set(targetPosition.x, targetPosition.y, interpolatedZ);
+
+    //             // Keep looking at the target
+    //             cameraRef.current.lookAt(new THREE.Vector3(-2.8, 1.4, 1.2));
+    //         }
     //     }
-    // }, []); // Run once on mount
+    // });
 
 // --------------------------------------------------------------------------------------------------
-
-    // // Track les mouvements de souris pour Parallax
-    // const mouse = useRef({ x: 0, y: 0 });
-    // const handleMouseMove = (event) => {
-    //     mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
-    //     mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    // };
-    // React.useEffect(() => {
-    //     window.addEventListener('mousemove', handleMouseMove);
-    //     return () => window.removeEventListener('mousemove', handleMouseMove);
-    // }, []);
-
-    // // Effet Parallax
-    // useFrame(() => {
-    //     if (cameraRef.current) {
-    //         const parallaxStrength = 1; // Adjust the intensity of the parallax
-    //         cameraRef.current.position.z = -2.8 + -mouse.current.x * parallaxStrength;
-    //         cameraRef.current.position.y = 2.5 + -mouse.current.y * parallaxStrength;
-    //     }
-    // });
-
-    // useFrame(() => {
-    //     if (cameraRef.current) {
-    //         const parallaxStrength = 1; // Adjust the intensity of the parallax
-    //         const targetZ = 7.1 + mouse.current.x * parallaxStrength;
-    //         const targetY = 2.5 + mouse.current.y * parallaxStrength;
-    //         // const targetZ = -2.8 + mouse.current.z * parallaxStrength;
-
-    //         // Smooth transition using interpolation
-    //         cameraRef.current.position.z += (targetZ - cameraRef.current.position.z) * 0.1;
-    //         cameraRef.current.position.y += (targetY - cameraRef.current.position.y) * 0.1;
-    //         // cameraRef.current.position.z += (targetZ - cameraRef.current.position.z) * 0.1;
-
-    //         // Ensure camera remains looking at the target
-    //         cameraRef.current.lookAt(-2.8, 1.4, 1.2);
-    //     }
-    // });
 
         // Track mouse movement
         const mouse = useRef({ x: 0, y: 0 });
@@ -91,12 +63,38 @@ export default function Experience() {
                 // Smooth interpolation
                 cameraRef.current.position.y += (targetY - cameraRef.current.position.y) * 0.1;
                 cameraRef.current.position.z += (targetZ - cameraRef.current.position.z) * 0.1;
+                // cameraRef.current.position.x += (targetZ - cameraRef.current.position.z) * 0.1;
     
                 // Ensure camera remains looking at the target
                 cameraRef.current.lookAt(new THREE.Vector3(-2.8, 1.4, 1.2));
             }
         });
 
+// --------------------------------------------
+
+    // Target Z position for smooth zoom
+    const targetX = useRef(7.1); // Start with the initial Z position
+
+    // Event handler for wheel scroll
+    const handleWheel = (event) => {
+        // Adjust the target Z position based on scroll direction
+        targetX.current += event.deltaY * 0.01; // Adjust sensitivity here
+        targetX.current = THREE.MathUtils.clamp(targetX.current, 6.1, 8.1); // Clamp to a reasonable range
+    };
+
+    // Add the wheel event listener
+    useEffect(() => {
+        window.addEventListener('wheel', handleWheel);
+        return () => window.removeEventListener('wheel', handleWheel);
+    }, []);
+
+    // Smoothly interpolate the camera's Z position
+    useFrame(() => {
+        if (cameraRef.current) {
+            cameraRef.current.position.x += (targetX.current - cameraRef.current.position.x) * 0.1; // Adjust smoothing factor here
+            cameraRef.current.lookAt(new THREE.Vector3(-2.8, 1.4, 1.2)); // Ensure the camera keeps looking at the target
+        }
+    });
 // --------------------------------------------------------------------------------------------------
     
     // House scene Import and loading
@@ -398,14 +396,18 @@ export default function Experience() {
                 <meshBasicMaterial color="#ffffe5" />
         </mesh>
 
-         {/* Water */}
-         <mesh
-            geometry={ waterGeometry }
-            position={[ -0.6, 0.15, -1 ]}
-            rotation={[ -Math.PI / 2, 0, 0 ]}
-         >
-            <waterMaterial ref={ waterMaterial }/>
-         </mesh>
+        {/* Water */}
+        <mesh
+        geometry={ waterGeometry }
+        position={[ -0.6, 0.15, -1 ]}
+        rotation={[ -Math.PI / 2, 0, 0 ]}
+        >
+        <waterMaterial ref={ waterMaterial }/>
+        </mesh>
+
+        {/* Sparkles ou Fireflies */}
+
+        <Sparkles />
         
     </>
 };
