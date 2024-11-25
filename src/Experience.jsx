@@ -1,12 +1,15 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { shaderMaterial, OrbitControls, useGLTF, useTexture, Plane, PerspectiveCamera, Sparkles } from '@react-three/drei'
+import { shaderMaterial, OrbitControls, useGLTF, useTexture, Plane, PerspectiveCamera, Sparkles, Stars, Cloud } from '@react-three/drei'
+import { EffectComposer, Vignette } from '@react-three/postprocessing';
+import { BlendFunction } from 'postprocessing'
 import { extend, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+// import * as THREE from 'three';
+import { Vector2, Vector3, MathUtils, Color, PlaneGeometry } from 'three';
 import GUI from 'lil-gui';
 import waterFragmentShader from './shaders/water/fragment.glsl';
 import waterVertexShader from './shaders/water/vertex.glsl';
-import { Water } from 'three/examples/jsm/Addons.js';
-import { log } from 'three/examples/jsm/nodes/Nodes.js';
+import { Water } from 'three/examples/jsm/objects/Water';
+import { log } from 'three/examples/jsm/nodes/Nodes';
 // import WaterScene from './WaterScene.jsx';
 // import WaterShader from '/WaterShader.jsx'
 
@@ -18,7 +21,7 @@ export default function Experience() {
     const controlsRef = useRef();
 
     // const initialZ = -50;
-    // const targetPosition = new THREE.Vector3(7.1, 2.5, 4.7);
+    // const targetPosition = new Vector3(7.1, 2.5, 4.7);
     // const [animationProgress, setAnimationProgress] = useState(0); // Track animation progress
 
     // // Animate the camera position when the scene loads
@@ -30,14 +33,17 @@ export default function Experience() {
     //             setAnimationProgress(newProgress);
 
     //             // Interpolate Z position
-    //             const interpolatedZ = THREE.MathUtils.lerp(initialZ, targetPosition.z, newProgress);
+    //             const interpolatedZ = MathUtils.lerp(initialZ, targetPosition.z, newProgress);
     //             cameraRef.current.position.set(targetPosition.x, targetPosition.y, interpolatedZ);
 
     //             // Keep looking at the target
-    //             cameraRef.current.lookAt(new THREE.Vector3(-2.8, 1.4, 1.2));
+    //             cameraRef.current.lookAt(new Vector3(-2.8, 1.4, 1.2));
     //         }
     //     }
     // });
+
+    // Custom Sparkle Color
+    const colorYellow = "#e6cf25";
 
 // --------------------------------------------------------------------------------------------------
 
@@ -66,7 +72,7 @@ export default function Experience() {
                 // cameraRef.current.position.x += (targetZ - cameraRef.current.position.z) * 0.1;
     
                 // Ensure camera remains looking at the target
-                cameraRef.current.lookAt(new THREE.Vector3(-2.8, 1.4, 1.2));
+                cameraRef.current.lookAt(new Vector3(-2.8, 1.4, 1.2));
             }
         });
 
@@ -79,7 +85,7 @@ export default function Experience() {
     const handleWheel = (event) => {
         // Adjust the target Z position based on scroll direction
         targetX.current += event.deltaY * 0.01; // Adjust sensitivity here
-        targetX.current = THREE.MathUtils.clamp(targetX.current, 6.1, 8.1); // Clamp to a reasonable range
+        targetX.current = MathUtils.clamp(targetX.current, 6.1, 8.1); // Clamp to a reasonable range
     };
 
     // Add the wheel event listener
@@ -92,9 +98,10 @@ export default function Experience() {
     useFrame(() => {
         if (cameraRef.current) {
             cameraRef.current.position.x += (targetX.current - cameraRef.current.position.x) * 0.1; // Adjust smoothing factor here
-            cameraRef.current.lookAt(new THREE.Vector3(-2.8, 1.4, 1.2)); // Ensure the camera keeps looking at the target
+            cameraRef.current.lookAt(new Vector3(-2.8, 1.4, 1.2)); // Ensure the camera keeps looking at the target
         }
     });
+
 // --------------------------------------------------------------------------------------------------
     
     // House scene Import and loading
@@ -103,7 +110,7 @@ export default function Experience() {
             uTime: 0,
     
             uBigWavesElevation: 0.08,
-            uBigWavesFrequency: new THREE.Vector2(1.52, 3.5),
+            uBigWavesFrequency: new Vector2(1.52, 3.5),
             uBigWavesSpeed: 1.4,
     
             uSmallWavesElevation: 0.15,
@@ -111,8 +118,8 @@ export default function Experience() {
             uSmallWavesSpeed: 0.24,
             uSmallIterations: 1,
     
-            uDepthColor: new THREE.Color('#1e00ff'),
-            uSurfaceColor: new THREE.Color('#6b6aa0'),
+            uDepthColor: new Color('#1e00ff'),
+            uSurfaceColor: new Color('#6b6aa0'),
             uColorOffset: 0.11,
             uColorMultiplier: 3
         },
@@ -124,10 +131,9 @@ export default function Experience() {
     
     // House,Island and lights geometry
     const { nodes } = useGLTF('./models/House_Scene.glb')
-    // console.log(nodes.Window_emission);
     const bakedObject = nodes.Baked;
     console.log(nodes.Baked.position);
-    // console.log(nodes);
+
 
     // House scene texture
     const bakedTexture = useTexture('/models/Baked_02.jpg')
@@ -137,7 +143,7 @@ export default function Experience() {
     
 
     // water geometry
-    const waterGeometry = new THREE.PlaneGeometry(13, 2.8, 12, 1024)
+    const waterGeometry = new PlaneGeometry(13, 2.8, 12, 1024)
 
     // waterMaterial
     const waterMaterial = useRef()
@@ -152,7 +158,7 @@ export default function Experience() {
 
         // Water debug object
         uBigWavesElevation: 0.08,
-        uBigWavesFrequency: new THREE.Vector2(1.52, 3.5),
+        uBigWavesFrequency: new Vector2(1.52, 3.5),
         uBigWavesSpeed: 1.4,
 
         uSmallWavesElevation: 0.15,
@@ -160,8 +166,8 @@ export default function Experience() {
         uSmallWavesSpeed: 0.24,
         uSmallIterations: 1,
 
-        uDepthColor: new THREE.Color('#0300ff'),
-        uSurfaceColor: new THREE.Color('#252459'),
+        uDepthColor: new Color('#0300ff'),
+        uSurfaceColor: new Color('#252459'),
         uColorOffset: 0.11,
         uColorMultiplier: 3,
 
@@ -314,100 +320,153 @@ export default function Experience() {
     
 
     return <>
-        {/* <OrbitControls ref={controlsRef}
-                       makeDefault
-                       position = {[7.1, 2.5, 4.7]}
-                       target={[-2.8, 1.4, 1.2]}
-        /> */}
 
-        {/* Camera */}
-        <PerspectiveCamera
-            ref={cameraRef}
-            makeDefault
-            position = {[7.1, 2.5, 4.7]}
-            target={[-2.8, 1.4, 1.2]}
-            // position={[debugObject.cameraPositionX, debugObject.cameraPositionY, debugObject.cameraPositionZ]}
-            // rotation={[debugObject.cameraRotationX, debugObject.cameraRotationY, debugObject.cameraRotationZ]}
-            // fov={debugObject.cameraFov}
-        />
+            {/* <OrbitControls ref={controlsRef}
+                        makeDefault
+                        position = {[7.1, 2.5, 4.7]}
+                        target={[-2.8, 1.4, 1.2]}
+            /> */}
 
-        {/* Axes Helper */}
-        <axesHelper args={[20]} position={[0, 0, 0]} />
+            {/* Camera */}
+            <PerspectiveCamera
+                ref={cameraRef}
+                makeDefault
+                position = {[7.1, 2.5, 4.7]}
+                target={[-2.8, 1.4, 1.2]}
+                // position={[debugObject.cameraPositionX, debugObject.cameraPositionY, debugObject.cameraPositionZ]}
+                // rotation={[debugObject.cameraRotationX, debugObject.cameraRotationY, debugObject.cameraRotationZ]}
+                // fov={debugObject.cameraFov}
+            />
 
-        {/* Background */}
-        <color args={['#201919']} attach="background" />
+            {/* Axes Helper */}
+            {/* <axesHelper args={[20]} position={[0, 0, 0]} /> */}
 
-        {/* House and Island */}
-        <mesh 
-            geometry={bakedObject.geometry} 
-            position={[
-                bakedObject.position.x,
-                bakedObject.position.y,
-                bakedObject.position.z
-            ]}
-            rotation={bakedObject.rotation}
-            scale={bakedObject.scale}>
-            <meshBasicMaterial map={bakedTexture} />
-        </mesh>
+            {/* Background */}
+            <color args={['#201919']} attach="background" />
 
-        {/* Lights geometries */}
-        <mesh 
-            geometry={nodes.Circle_emission.geometry}
-            position={nodes.Circle_emission.position}
-            rotation={nodes.Circle_emission.rotation}
-            scale={nodes.Circle_emission.scale}
+            <Stars 
+                radius={100}      // Outer radius
+                depth={25}        // Depth into the scene
+                count={4000}      // Number of stars
+                factor={5}        // Size of the stars
+                saturation={0}    // Color saturation
+                fade              // Fades near the edges of the view
+            />
+
+            {/* <group position={[0, 5, 0]}>
+                <Cloud opacity={0.5} speed={0.2} width={6} depth={4} segments={5} />
+            </group> */}
+
+            {/* House and Island */}
+            <mesh 
+                geometry={bakedObject.geometry} 
+                position={[
+                    bakedObject.position.x,
+                    bakedObject.position.y,
+                    bakedObject.position.z
+                ]}
+                rotation={bakedObject.rotation}
+                scale={bakedObject.scale}>
+                <meshBasicMaterial map={bakedTexture} />
+            </mesh>
+
+            {/* Lights geometries */}
+            <mesh 
+                geometry={nodes.Circle_emission.geometry}
+                position={nodes.Circle_emission.position}
+                rotation={nodes.Circle_emission.rotation}
+                scale={nodes.Circle_emission.scale}
+                >
+                    <meshBasicMaterial color="#ffffe5" />
+            </mesh>
+
+            <mesh
+                geometry={nodes.Door_emission.geometry}
+                position={nodes.Door_emission.position}
+                rotation={nodes.Door_emission.rotation}
+                scale={nodes.Door_emission.scale}
+                >
+                    <meshBasicMaterial color="#ffffe5" />
+            </mesh>
+
+            <mesh
+                geometry={nodes.OverDoor_emission.geometry}
+                position={nodes.OverDoor_emission.position}
+                rotation={nodes.OverDoor_emission.rotation}
+                scale={nodes.OverDoor_emission.scale}
+                >
+                    <meshBasicMaterial color="#ffffe5" />
+            </mesh>
+
+            <mesh
+                geometry={nodes.Window_emission.geometry}
+                position={nodes.Window_emission.position}
+                rotation={nodes.Window_emission.rotation}
+                scale={nodes.Window_emission.scale}
+                >
+                    <meshBasicMaterial color="#ffffe5" />
+            </mesh>
+
+            <mesh
+                geometry={nodes.Poteau_emission.geometry}
+                position={nodes.Poteau_emission.position}
+                rotation={nodes.Poteau_emission.rotation}
+                scale={nodes.Poteau_emission.scale}
+                >
+                    <meshBasicMaterial color="#ffffe5" />
+            </mesh>
+
+            {/* Water */}
+            <mesh
+            geometry={ waterGeometry }
+            position={[ -0.6, 0.15, -1 ]}
+            rotation={[ -Math.PI / 2, 0, 0 ]}
             >
-                <meshBasicMaterial color="#ffffe5" />
-        </mesh>
+            <waterMaterial ref={ waterMaterial }/>
+            </mesh>
 
-        <mesh
-            geometry={nodes.Door_emission.geometry}
-            position={nodes.Door_emission.position}
-            rotation={nodes.Door_emission.rotation}
-            scale={nodes.Door_emission.scale}
-            >
-                <meshBasicMaterial color="#ffffe5" />
-        </mesh>
+            {/* Sparkles ou Fireflies */}
 
-        <mesh
-            geometry={nodes.OverDoor_emission.geometry}
-            position={nodes.OverDoor_emission.position}
-            rotation={nodes.OverDoor_emission.rotation}
-            scale={nodes.OverDoor_emission.scale}
-            >
-                <meshBasicMaterial color="#ffffe5" />
-        </mesh>
+            <Sparkles
+                count = { 10 }
+                size = { 8 }
+                scale = { [0.6, 0.2, 0.3] }
+                position = { [2.7, 2.7, 1.8] }
+                speed = { 0.6 }
+                color = { colorYellow }
+                opacity={ 0.6 }
+                noise = { 100 }
+            />
 
-        <mesh
-            geometry={nodes.Window_emission.geometry}
-            position={nodes.Window_emission.position}
-            rotation={nodes.Window_emission.rotation}
-            scale={nodes.Window_emission.scale}
-            >
-                <meshBasicMaterial color="#ffffe5" />
-        </mesh>
+            <Sparkles 
+                count = { 4 }
+                size = { 8 }
+                scale = { [0.2, 0.1, 0.2] }
+                position = { [1.2, 1.2, 3.45] }
+                speed = { 0.6 }
+                color = { colorYellow }
+                opacity={ 0.6 }
+                noise = { 100 }
+            />
 
-        <mesh
-            geometry={nodes.Poteau_emission.geometry}
-            position={nodes.Poteau_emission.position}
-            rotation={nodes.Poteau_emission.rotation}
-            scale={nodes.Poteau_emission.scale}
-            >
-                <meshBasicMaterial color="#ffffe5" />
-        </mesh>
+            <Sparkles 
+                count = { 100 }
+                size = { 3 }
+                scale = { [12, 0.5, 14] }
+                position = { [-0.8, 0.6, -0.5] }
+                speed = { 0.3 }
+                // color = { colorYellow }
+                opacity={ 0.6 }
+                noise = { 100 }
+            />
 
-        {/* Water */}
-        <mesh
-        geometry={ waterGeometry }
-        position={[ -0.6, 0.15, -1 ]}
-        rotation={[ -Math.PI / 2, 0, 0 ]}
-        >
-        <waterMaterial ref={ waterMaterial }/>
-        </mesh>
-
-        {/* Sparkles ou Fireflies */}
-
-        <Sparkles />
-        
+            {/* <EffectComposer>
+                <Vignette
+                    eskil={true}
+                    offset={0.5}
+                    darkness={1.5}
+                    blendFunction={BlendFunction.NORMAL}
+                />
+            </EffectComposer> */}
     </>
 };

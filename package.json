@@ -14,8 +14,9 @@
   },
   "dependencies": {
     "@react-spring/three": "^9.7.5",
-    "@react-three/drei": "^9.105.4",
-    "@react-three/fiber": "^8.15.8",
+    "@react-three/drei": "^9.117.3",
+    "@react-three/fiber": "^8.17.10",
+    "@react-three/postprocessing": "^2.16.3",
     "dat.gui": "^0.7.9",
     "lil-gui": "^0.19.2",
     "r3f-perf": "^7.1.2",
