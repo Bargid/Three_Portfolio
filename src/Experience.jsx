@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { shaderMaterial, OrbitControls, useGLTF, useTexture, Plane, PerspectiveCamera, Sparkles, Stars, Html } from '@react-three/drei'
 // import { HTML } from '@react-three/drei';
 import { EffectComposer, Vignette } from '@react-three/postprocessing';
@@ -166,46 +166,8 @@ export default function Experience() {
             } else {
                 document.body.style.cursor = 'default';
             }
-            setHighlightedFace(intersection);
         }
     }
-
-    function MeshWithHtmlOverlays({ bakedObject, bakedTexture }) {
-        const [highlightedFace, setHighlightedFace] = useState(null); // Store highlighted face
-        const { camera, viewport } = useThree(); // To convert 3D positions to screen space
-
-    // Memoize the geometry for the hovered face
-    const highlightedPosition = useMemo(() => {
-        if (!highlightedFace) return new Vector3(0, 0, 0);
-
-    // Get the selected face and its position
-    const geometry = bakedObject.geometry;
-    const face = geometry.faces[highlightedFace.faceIndex];
-    const vertices = [
-        geometry.vertices[face.a],
-        geometry.vertices[face.b],
-        geometry.vertices[face.c],
-    ];
-
-    // Calculate the center of the face (the average of the three vertices)
-    const center = new Vector3();
-    vertices.forEach((vertex) => {
-        center.add(vertex);
-    });
-    center.divideScalar(3);
-    
-    return center;
-    }, [highlightedFace, bakedObject.geometry]);
-
-    // Convert 3D world position to 2D screen position
-    const screenPosition = useMemo(() => {
-    if (!highlightedPosition) return { x: 0, y: 0 };
-
-    const pos = highlightedPosition.clone().project(camera);
-    const x = (pos.x * 0.5 + 0.5) * viewport.width;
-    const y = (pos.y * -0.5 + 0.5) * viewport.height;
-    return { x, y };
-    }, [highlightedPosition, camera, viewport]);
 
     // function handlePointerOut() {
     //     // Reset the cursor to default when leaving the mesh
@@ -331,6 +293,8 @@ export default function Experience() {
         }
     });
 
+// Scene Objects --------------------------------------------------------------------------------------------------
+
     return <>
 
             {/* <OrbitControls ref={controlsRef}
@@ -386,22 +350,6 @@ export default function Experience() {
                 >
                 <meshBasicMaterial map={bakedTexture} />
             </mesh>
-
-            {/* HTML overlay (this is the element that will follow the face) */}
-            {highlightedFace && (
-                <Html
-                position={[screenPosition.x, screenPosition.y, 0]} // Position it based on the 2D screen space
-                distanceFactor={10} // Control how close or far the HTML element appears
-                style={{
-                    pointerEvents: 'none', // Prevent the HTML overlay from blocking 3D interactions
-                    transform: 'translate(-50%, -50%)', // Center the HTML element
-                }}
-                >
-                <div style={{ backgroundColor: 'rgba(0,0,0,0.7)', padding: '10px', borderRadius: '5px', color: 'white' }}>
-                    Face {highlightedFace.faceIndex} Hovered!
-                </div>
-                </Html>
-            )}
 
             {/* Lights geometries */}
             <mesh 
